@@ -6,6 +6,9 @@
 
 set -euo pipefail
 
+export SPACK_ROOT=${HOME}/src/spack
+source $SPACK_ROOT/share/spack/setup-env.sh
+
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'

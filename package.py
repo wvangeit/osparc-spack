@@ -6,9 +6,9 @@ import subprocess
 
 class Osparc(Package):
     """o2S2PARC - Open Online Simulations for Stimulating Peripheral Activity to Relieve Conditions.
-    
-    A comprehensive, freely accessible, intuitive, and interactive online platform 
-    for simulating peripheral nerve system neuromodulation/stimulation and its impact 
+
+    A comprehensive, freely accessible, intuitive, and interactive online platform
+    for simulating peripheral nerve system neuromodulation/stimulation and its impact
     on organ physiology in a precise and predictive manner.
     """
 
@@ -24,11 +24,25 @@ class Osparc(Package):
 
     # Variants following project structure
     variant("production", default=False, description="Build for production deployment")
-    variant("development", default=True, description="Build for development with hot-reload")
+    variant(
+        "development", default=True, description="Build for development with hot-reload"
+    )
     variant("frontend", default=True, description="Build frontend static-webserver")
-    variant("tests", default=False, description="Install test dependencies and enable testing")
-    variant("ops", default=True, description="Include ops stack (monitoring, portainer, etc.)")
-    variant("vendors", default=True, description="Include vendor services (postgres, redis, etc.)")
+    variant(
+        "tests",
+        default=False,
+        description="Install test dependencies and enable testing",
+    )
+    variant(
+        "ops",
+        default=True,
+        description="Include ops stack (monitoring, portainer, etc.)",
+    )
+    variant(
+        "vendors",
+        default=True,
+        description="Include vendor services (postgres, redis, etc.)",
+    )
 
     # Core dependencies - following .env-devel and Makefile requirements
     # depends_on("docker@20.10:", type=("build", "run"))
@@ -42,6 +56,7 @@ class Osparc(Package):
     #
     # # Python - following python version requirement
     depends_on("python@3.11", type=("build", "run"))
+
     # depends_on("py-pip", type="build")
     # depends_on("py-virtualenv", type="build")
     # depends_on("uv", type="build")
@@ -52,7 +67,7 @@ class Osparc(Package):
     #
     # # System utilities
     # depends_on("bash@4.0:", type=("build", "run"))
-    # depends_on("findutils", type="build") 
+    # depends_on("findutils", type="build")
     # depends_on("sed", type="build")
     #
     # # Testing dependencies
@@ -66,18 +81,21 @@ class Osparc(Package):
         """Setup build environment variables following .env-devel structure."""
         # Core Docker settings
         env.set("DOCKER_REGISTRY", "local")
-        env.set("DOCKER_IMAGE_TAG", "production" if "+production" in self.spec else "development")
+        env.set(
+            "DOCKER_IMAGE_TAG",
+            "production" if "+production" in self.spec else "development",
+        )
         env.set("SWARM_STACK_NAME", f"spack-{self.spec.name}")
-        
+
         # Python settings
         env.set("PYTHON_VERSION", "3.11")
-        
+
         # Build configuration
         if "+production" in self.spec:
             env.set("BUILD_TARGET", "production")
         else:
             env.set("BUILD_TARGET", "development")
-            
+
         # Frontend settings
         if "+frontend" in self.spec:
             env.set("BUILD_FRONTEND", "1")
@@ -87,6 +105,7 @@ class Osparc(Package):
         # Set CPU count for parallel builds
         try:
             import multiprocessing
+
             env.set("DEV_PC_CPU_COUNT", str(multiprocessing.cpu_count()))
         except:
             env.set("DEV_PC_CPU_COUNT", "4")
@@ -95,11 +114,11 @@ class Osparc(Package):
         """Setup runtime environment variables."""
         env.set("OSPARC_SIMCORE_ROOT", self.prefix.share.osparc_simcore)
         env.prepend_path("PATH", join_path(self.prefix, "bin"))
-        
+
         # Docker swarm settings
         env.set("SWARM_STACK_NAME", f"spack-{self.spec.name}")
         env.set("DOCKER_REGISTRY", "local")
-        
+
         # Service endpoints - following project's nip.io pattern
         env.set("OSPARC_FRONTEND_URL", "http://127.0.0.1.nip.io:9081")
         env.set("OSPARC_API_URL", "http://127.0.0.1.nip.io:8006")
@@ -110,53 +129,65 @@ class Osparc(Package):
         # Check Docker daemon
         try:
             import subprocess
-            subprocess.check_call(["docker", "info"], 
-                                stdout=subprocess.DEVNULL, 
-                                stderr=subprocess.DEVNULL)
+
+            subprocess.check_call(
+                ["docker", "info"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
         except (subprocess.CalledProcessError, FileNotFoundError):
-            raise InstallError("Docker daemon is not running. Please start Docker first.")
-            
+            raise InstallError(
+                "Docker daemon is not running. Please start Docker first."
+            )
+
         # Check Docker Swarm (initialize if needed)
         try:
-            subprocess.check_call(["docker", "node", "ls"], 
-                                stdout=subprocess.DEVNULL, 
-                                stderr=subprocess.DEVNULL)
+            subprocess.check_call(
+                ["docker", "node", "ls"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
         except subprocess.CalledProcessError:
             tty.msg("Initializing Docker Swarm...")
             subprocess.check_call(["docker", "swarm", "init"])
 
         # Check Python version matches requirement
         python_exe = self.spec["python"].command.path
-        result = subprocess.run([python_exe, "--version"], 
-                              capture_output=True, text=True)
+        result = subprocess.run(
+            [python_exe, "--version"], capture_output=True, text=True
+        )
         if "3.11" not in result.stdout:
             tty.warn(f"Python version should be 3.11, found: {result.stdout.strip()}")
 
     def install(self, spec, prefix):
         """Install osparc-simcore following project structure."""
-        
+
         # Create installation directories
         mkdirp(prefix.bin)
         mkdirp(prefix.etc.osparc_simcore)
         mkdirp(prefix.share.osparc_simcore)
         mkdirp(prefix.var.log.osparc_simcore)
-        
+
         # Copy entire source tree to share directory
-        install_tree(".", prefix.share.osparc_simcore, 
-                    ignore=lambda files: [f for f in files 
-                                           if f.startswith('.git') or 
-                                              f.endswith('.pyc') or
-                                              f.endswith('__pycache__')])
-        
+        install_tree(
+            ".",
+            prefix.share.osparc_simcore,
+            ignore=lambda files: [
+                f
+                for f in files
+                if f.startswith(".git")
+                or f.endswith(".pyc")
+                or f.endswith("__pycache__")
+            ],
+        )
+
         # Create environment file following project's env-vars.md guidelines
         self._create_environment_file(prefix)
-        
+
         # Setup Python virtual environment with uv (following project's use of uv)
         self._setup_python_environment(prefix)
-        
+
         # Create wrapper scripts
         self._create_wrapper_scripts(prefix)
-        
+
         # Build Docker images if in production mode
         if "+production" in spec:
             with working_dir(prefix.share.osparc_simcore):
@@ -165,16 +196,18 @@ class Osparc(Package):
                     make("build")
                     tty.msg("Successfully built production Docker images")
                 except:
-                    tty.warn("Could not build Docker images during install. "
-                           "Run 'osparc-build' manually after installation.")
+                    tty.warn(
+                        "Could not build Docker images during install. "
+                        "Run 'osparc-build' manually after installation."
+                    )
 
     def _create_environment_file(self, prefix):
         """Create .env file following project's environment variable guidelines."""
         env_file = join_path(prefix.share.osparc_simcore, ".env")
-        
+
         # Read the template .env-devel file
         env_devel_path = join_path(prefix.share.osparc_simcore, ".env-devel")
-        
+
         env_content = f"""# osparc-simcore Spack environment configuration
 # Based on .env-devel with Spack-specific modifications
 
@@ -182,7 +215,7 @@ class Osparc(Package):
 COMPOSE_PROJECT_NAME=spack-simcore
 SWARM_STACK_NAME=spack-{self.spec.name}
 DOCKER_REGISTRY=local
-DOCKER_IMAGE_TAG={'production' if '+production' in self.spec else 'development'}
+DOCKER_IMAGE_TAG={"production" if "+production" in self.spec else "development"}
 
 # Installation paths
 OSPARC_SIMCORE_ROOT={prefix.share.osparc_simcore}
@@ -191,40 +224,45 @@ OSPARC_SIMCORE_ROOT={prefix.share.osparc_simcore}
 PYTHON_VERSION=3.11
 
 # Build settings
-BUILD_TARGET={'production' if '+production' in self.spec else 'development'}
+BUILD_TARGET={"production" if "+production" in self.spec else "development"}
 DEV_PC_CPU_COUNT={os.cpu_count() or 4}
 
 # Service URLs (using nip.io for local development)
 SIMCORE_WEB_OUTDIR={prefix.share.osparc_simcore}/services/static-webserver/client/source-output
 """
-        
+
         # Merge with existing .env-devel if it exists
         if os.path.exists(env_devel_path):
-            with open(env_devel_path, 'r') as f:
+            with open(env_devel_path, "r") as f:
                 devel_content = f.read()
-            
+
             # Filter out conflicting variables
             filtered_lines = []
-            skip_vars = {'COMPOSE_PROJECT_NAME', 'SWARM_STACK_NAME', 'DOCKER_REGISTRY', 
-                        'DOCKER_IMAGE_TAG', 'BUILD_TARGET'}
-            
-            for line in devel_content.split('\n'):
-                if '=' in line and not line.startswith('#'):
-                    var_name = line.split('=')[0].strip()
+            skip_vars = {
+                "COMPOSE_PROJECT_NAME",
+                "SWARM_STACK_NAME",
+                "DOCKER_REGISTRY",
+                "DOCKER_IMAGE_TAG",
+                "BUILD_TARGET",
+            }
+
+            for line in devel_content.split("\n"):
+                if "=" in line and not line.startswith("#"):
+                    var_name = line.split("=")[0].strip()
                     if var_name not in skip_vars:
                         filtered_lines.append(line)
                 else:
                     filtered_lines.append(line)
-            
-            env_content += '\n# From .env-devel\n' + '\n'.join(filtered_lines)
-        
-        with open(env_file, 'w') as f:
+
+            env_content += "\n# From .env-devel\n" + "\n".join(filtered_lines)
+
+        with open(env_file, "w") as f:
             f.write(env_content)
 
     def _setup_python_environment(self, prefix):
         """Setup Python virtual environment using uv."""
         venv_path = join_path(prefix.share.osparc_simcore, ".venv")
-        
+
         with working_dir(prefix.share.osparc_simcore):
             # Create virtual environment using uv
             uv_exe = which("uv")
@@ -237,7 +275,7 @@ SIMCORE_WEB_OUTDIR={prefix.share.osparc_simcore}/services/static-webserver/clien
 
     def _create_wrapper_scripts(self, prefix):
         """Create wrapper scripts for osparc-simcore operations."""
-        
+
         # Base script template
         script_template = f"""#!/bin/bash
 # osparc-simcore wrapper script generated by Spack
@@ -272,59 +310,77 @@ fi
         # Main osparc command
         main_script = join_path(prefix.bin, "osparc")
         with open(main_script, "w") as f:
-            f.write(script_template + f"""
+            f.write(
+                script_template
+                + f"""
 # Execute make command
 exec make "$@"
-""")
+"""
+            )
         os.chmod(main_script, 0o755)
 
         # Build command
         build_script = join_path(prefix.bin, "osparc-build")
         with open(build_script, "w") as f:
-            f.write(script_template + f"""
+            f.write(
+                script_template
+                + f"""
 echo "Building osparc-simcore Docker images..."
-exec make {'build' if '+production' in self.spec else 'build-devel'}
-""")
+exec make {"build" if "+production" in self.spec else "build-devel"}
+"""
+            )
         os.chmod(build_script, 0o755)
 
         # Deploy commands
         deploy_script = join_path(prefix.bin, "osparc-up")
         with open(deploy_script, "w") as f:
-            f.write(script_template + f"""
+            f.write(
+                script_template
+                + f"""
 echo "Deploying osparc-simcore..."
-exec make {'up-prod' if '+production' in self.spec else 'up-devel'} {'ops_disabled=1' if '~ops' in self.spec else ''}
-""")
+exec make {"up-prod" if "+production" in self.spec else "up-devel"} {"ops_disabled=1" if "~ops" in self.spec else ""}
+"""
+            )
         os.chmod(deploy_script, 0o755)
 
         # Stop command
         stop_script = join_path(prefix.bin, "osparc-down")
         with open(stop_script, "w") as f:
-            f.write(script_template + f"""
+            f.write(
+                script_template
+                + f"""
 echo "Stopping osparc-simcore..."
 exec make down
-""")
+"""
+            )
         os.chmod(stop_script, 0o755)
 
         # Info command
         info_script = join_path(prefix.bin, "osparc-info")
         with open(info_script, "w") as f:
-            f.write(script_template + f"""
+            f.write(
+                script_template
+                + f"""
 echo "osparc-simcore installation info:"
 echo "Installation root: $OSPARC_SIMCORE_ROOT"
-echo "Variant: {'production' if '+production' in self.spec else 'development'}"
+echo "Variant: {"production" if "+production" in self.spec else "development"}"
 echo ""
 exec make info show-endpoints
-""")
+"""
+            )
         os.chmod(info_script, 0o755)
 
         # Test command (when +tests variant is enabled)
         if "+tests" in self.spec:
             test_script = join_path(prefix.bin, "osparc-test")
             with open(test_script, "w") as f:
-                f.write(script_template + f"""
+                f.write(
+                    script_template
+                    + f"""
 echo "Running osparc-simcore tests..."
 exec make test-unit
-""")
+"""
+                )
             os.chmod(test_script, 0o755)
 
     @run_after("install")
@@ -355,20 +411,31 @@ exec make test-unit
         with working_dir(self.prefix.share.osparc_simcore):
             # Test basic make targets
             make("info")
-            
+
             # Test environment setup
             env_file = join_path(self.prefix.share.osparc_simcore, ".env")
             assert os.path.isfile(env_file), "Environment file not created"
-            
+
             # Test Python virtual environment
-            venv_python = join_path(self.prefix.share.osparc_simcore, ".venv", "bin", "python")
+            venv_python = join_path(
+                self.prefix.share.osparc_simcore, ".venv", "bin", "python"
+            )
             if os.path.isfile(venv_python):
-                result = subprocess.run([venv_python, "--version"], 
-                                      capture_output=True, text=True)
-                assert "3.11" in result.stdout, f"Wrong Python version in venv: {result.stdout}"
-            
+                result = subprocess.run(
+                    [venv_python, "--version"], capture_output=True, text=True
+                )
+                assert "3.11" in result.stdout, (
+                    f"Wrong Python version in venv: {result.stdout}"
+                )
+
         # Test wrapper scripts
-        for script in ["osparc", "osparc-build", "osparc-up", "osparc-down", "osparc-info"]:
+        for script in [
+            "osparc",
+            "osparc-build",
+            "osparc-up",
+            "osparc-down",
+            "osparc-info",
+        ]:
             script_path = join_path(self.prefix.bin, script)
             assert os.path.isfile(script_path), f"Script {script} not created"
             assert os.access(script_path, os.X_OK), f"Script {script} not executable"
