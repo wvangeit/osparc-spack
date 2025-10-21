@@ -137,7 +137,7 @@ install_osparc() {
     log_info "Variants: $variant_args"
 
     # Install with progress monitoring
-    if ! spack install -v osparc "${variant_args}"; then
+    if ! spack install -d -v osparc "${variant_args}"; then
         log_error "Installation failed"
         exit 1
     fi
