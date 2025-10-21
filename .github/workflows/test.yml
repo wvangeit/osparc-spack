@@ -18,3 +18,5 @@ jobs:
           buildcache: true
           color: true
           path: spack
+      - name: Test install python
+        run: spack install python
