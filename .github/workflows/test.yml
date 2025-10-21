@@ -9,8 +9,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    matrix:
-      mode: ["", "--prod"]
+    strategy:
+      matrix:
+        mode: ["", "--prod"]
     env:
       SPACK_ROOT: spack
     steps:
