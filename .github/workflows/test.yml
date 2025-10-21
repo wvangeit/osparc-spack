@@ -20,3 +20,7 @@ jobs:
           path: spack
       - name: Install osparc package
         run: ./install.sh
+      - name: Test osparc package
+        run: |
+          spack load osparc
+          osparc-build
