@@ -1,8 +1,4 @@
 #!/bin/bash
-# filepath: scripts/install-with-spack.sh
-
-# osparc Spack installation script
-# Following project coding guidelines and env-vars.md
 
 set -euo pipefail
 
@@ -98,7 +94,7 @@ setup_spack_repo() {
 # Install osparc
 install_osparc() {
     local variant_args=""
-    local install_mode="development"
+    local install_mode="devel"
 
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
@@ -134,7 +130,7 @@ install_osparc() {
 
     # Set default variants if none specified
     if [ -z "$variant_args" ]; then
-        variant_args="+development +frontend +ops +vendors"
+        variant_args="+devel +frontend +ops +vendors"
     fi
 
     log_info "Installing osparc in $install_mode mode..."
@@ -183,7 +179,7 @@ osparc Spack Installation Script
 Usage: $0 [OPTIONS]
 
 Options:
-    --production    Install for production deployment (default: development)
+    --prod    Install for production deployment (default: devel)
     --no-frontend   Skip frontend components
     --no-ops        Skip ops stack (monitoring, portainer, etc.)
     --with-tests    Include test dependencies
@@ -191,8 +187,8 @@ Options:
 
 Examples:
     $0                          # Development installation
-    $0 --production             # Production installation  
-    $0 --production --no-ops    # Production without ops stack
+    $0 --prod             # Production installation  
+    $0 --prod --no-ops    # Production without ops stack
     $0 --with-tests             # Development with test dependencies
 
 Environment Variables (following env-vars.md):

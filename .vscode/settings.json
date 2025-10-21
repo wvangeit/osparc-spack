@@ -1,0 +1,13 @@
+{
+    "python.analysis.extraPaths": [
+        "/home/wvangeit/src/spack/lib/spack"
+    ],
+    "python.envFile": "${workspaceFolder}/.env",
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "black-formatter.args": [
+        "--line-length",
+        "78"
+    ]
+}
