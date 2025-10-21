@@ -3,7 +3,9 @@
 import multiprocessing
 import os
 import subprocess
+import traceback
 
+from spack.build_environment import MakeExecutable
 from spack.package import (
     InstallError,
     Package,
@@ -11,7 +13,6 @@ from spack.package import (
     install_tree,
     join_path,
     maintainers,
-    make,
     mkdirp,
     run_after,
     run_before,
@@ -39,6 +40,13 @@ class Osparc(Package):
         "archive/refs/tags/v1.0.0.tar.gz"
     )
 
+    make = MakeExecutable(
+        "make",
+        jobs=1,
+        # jobs=(
+        #     multiprocessing.cpu_count() if multiprocessing.cpu_count() else 1
+        # ),
+    )
     maintainers("wvangeit", "sanderegg", "pcrespov")
 
     # Versions
@@ -232,20 +240,22 @@ class Osparc(Package):
             ignore=lambda files: [
                 f
                 for f in files
-                if f.startswith(".git")
-                or f.endswith(".pyc")
+                # if f.startswith(".git")
+                if f.endswith(".pyc")
                 or f.endswith("__pycache__")
             ],
         )
 
         # Create environment file following project's env-vars.md guidelines
-        # self._create_environment_file(prefix)
+        self._create_environment_file(prefix)
         with working_dir(prefix.share.osparc_simcore):
             try:
-                make("devenv")
+                self.make("devenv")
                 tty.msg("Successfully built dev environment")
-            except Exception:  # pylint: disable=broad-except
+            except Exception as exception:  # pylint: disable=broad-except
                 tty.error("Could not build dev environment during install. ")
+                print(traceback.format_exc())
+                raise exception
 
         self._setup_python_environment(prefix)
 
@@ -257,7 +267,7 @@ class Osparc(Package):
             with working_dir(prefix.share.osparc_simcore):
                 try:
                     # Build production images
-                    make("build")
+                    self.make("build")
                     tty.msg("Successfully built production Docker images")
                 except Exception:  # pylint: disable=broad-except
                     tty.warn(
@@ -489,7 +499,7 @@ exec make test-unit
         """Test the installation following TDD principles."""
         with working_dir(self.prefix.share.osparc_simcore):
             # Test basic make targets
-            make("info")
+            self.make("info")
 
             # Test environment setup
             env_file = join_path(

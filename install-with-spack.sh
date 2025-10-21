@@ -2,9 +2,6 @@
 
 set -euo pipefail
 
-export SPACK_ROOT=${HOME}/src/spack
-source $SPACK_ROOT/share/spack/setup-env.sh
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -80,8 +77,11 @@ setup_spack_repo() {
     local pkg_dir="$repo_path/spack_repo/vilitis/packages/osparc"
     mkdir -p "$pkg_dir"
 
+    spack external find
+
     # Assume package.py is in same directory as this script
-    local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     if [ -f "$script_dir/package.py" ]; then
         cp "$script_dir/package.py" "$pkg_dir/"
         log_info "Package file installed ✓"
@@ -99,9 +99,9 @@ install_osparc() {
     # Parse command line arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
-        --production)
-            variant_args="+production"
-            install_mode="production"
+        --prod)
+            variant_args="+prod"
+            install_mode="prod"
             shift
             ;;
         --no-frontend)
@@ -137,7 +137,7 @@ install_osparc() {
     log_info "Variants: $variant_args"
 
     # Install with progress monitoring
-    if ! spack install -v osparc $variant_args; then
+    if ! spack install -v osparc "${variant_args}"; then
         log_error "Installation failed"
         exit 1
     fi
@@ -210,6 +210,10 @@ EOF
 # Main execution
 main() {
     log_info "Starting osparc Spack installation..."
+
+    export SPACK_ROOT=${HOME}/src/spack
+    # shellcheck disable=SC1091
+    source "${SPACK_ROOT}/share/spack/setup-env.sh"
 
     check_prerequisites
     setup_spack_repo
