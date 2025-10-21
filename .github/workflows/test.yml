@@ -19,11 +19,11 @@ jobs:
         with:
           buildcache: true
           color: true
-          path: $SPACK_ROOT
+          path: ${{ env.SPACK_ROOT }}
       - name: Install osparc package
         run: ./install.sh
       - name: Test osparc package
         run: |
-          source "$SPACK_ROOT/share/spack/setup-env.sh"
+          source "${{ env.SPACK_ROOT }}/share/spack/setup-env.sh"
           spack load osparc
           osparc-build

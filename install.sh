@@ -211,8 +211,6 @@ EOF
 main() {
     log_info "Starting osparc Spack installation..."
 
-    export SPACK_ROOT=spack
-    # shellcheck disable=SC1091
     source "${SPACK_ROOT}/share/spack/setup-env.sh"
 
     check_prerequisites
