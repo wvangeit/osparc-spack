@@ -97,7 +97,7 @@ class Osparc(Package):
 
     # depends_on("py-pip", type="build")
     # depends_on("py-virtualenv", type="build")
-    depends_on("uv", type="build")
+    # depends_on("uv", type="build")
     #
     # # Node.js for frontend - following package.json
     # depends_on("node-js@18:", type="build", when="+frontend")
