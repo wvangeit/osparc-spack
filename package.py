@@ -43,9 +43,6 @@ class Osparc(Package):
     make = MakeExecutable(
         "make",
         jobs=1,
-        # jobs=(
-        #     multiprocessing.cpu_count() if multiprocessing.cpu_count() else 1
-        # ),
     )
     maintainers("wvangeit", "sanderegg", "pcrespov")
 

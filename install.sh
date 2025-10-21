@@ -137,7 +137,7 @@ install_osparc() {
     log_info "Variants: $variant_args"
 
     # Install with progress monitoring
-    if ! spack install -v osparc "${variant_args}"; then
+    if ! spack -d install -v osparc "${variant_args}"; then
         log_error "Installation failed"
         exit 1
     fi
@@ -211,8 +211,6 @@ EOF
 main() {
     log_info "Starting osparc Spack installation..."
 
-    export SPACK_ROOT=${HOME}/src/spack
-    # shellcheck disable=SC1091
     source "${SPACK_ROOT}/share/spack/setup-env.sh"
 
     check_prerequisites
