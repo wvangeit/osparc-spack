@@ -9,6 +9,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-24.04
+    matrix:
+      mode: ["", "--prod"]
     env:
       SPACK_ROOT: spack
     steps:
@@ -21,7 +23,7 @@ jobs:
           color: true
           path: ${{ env.SPACK_ROOT }}
       - name: Install osparc package
-        run: ./install.sh
+        run: ./install.sh ${{ matrix.mode }}
       - name: Test osparc package
         run: |
           source "${{ env.SPACK_ROOT }}/share/spack/setup-env.sh"
