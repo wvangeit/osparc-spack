@@ -1,0 +1,20 @@
+name: Build and Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Set up Spack
+        uses: spack/setup-spack@v2
+        with:
+          buildcache: true
+          color: true
+          path: spack
